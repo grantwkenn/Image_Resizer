@@ -9,8 +9,8 @@ import filetype
 
 
 # Input and output paths
-input_path = "12 December 2024"
-output_path = "12 December 2024_resized2"
+input_path = "2015"
+output_path = "re2015"
 
 
 
@@ -66,9 +66,35 @@ def sanitize_exif_2(exif_data):
                 del exif_data[ifd][tag]    
 
 
+def getAspectRatio(image):
+    width, height = image.size
+    long = None
+    short = None
+    if width > height:
+        long = width
+        short = height
+    else:
+        long = height
+        short = width
+    aspect_ratio = long / short
+
+    if aspect_ratio == 1.0:
+        return "1:1"
+    elif aspect_ratio > 1.33 and aspect_ratio < 1.34:
+        return "4:3"
+    elif aspect_ratio > 1.77 and aspect_ratio < 1.78:
+        return "16:9"
+    return "None"
+
+
 def resize(input_path, output_path):
     # Resize image
     with Image.open(input_path) as img:
+
+        if img.width * img.height < (1920 * 1080):
+            print(f"Skipping {input_path} as it is smaller than 1920x1080 pixels.")
+            shutil.copy2(input_path, output_path)
+            return  # Skip resizing if the image is smaller than 1920x1080 pixels
 
             # Load EXIF data safely
         exif_bytes = img.info.get("exif", None)
@@ -86,12 +112,20 @@ def resize(input_path, output_path):
         else:
             exif_data = None  # No EXIF data present  
 
-
-
-
-
+        print(img.width)
+        print(img.height)
+        new_size = (img.width / 2, img.height / 2)  # Set desired width and height
+        aspectRatio = getAspectRatio(img)
         
-        new_size = (1920, 1080)  # Set desired width and height
+        if aspectRatio == "1:1":
+            new_size = (1440,1440)
+        elif aspectRatio == "4:3":
+            new_size = (1920,1440)
+        elif aspectRatio == "16:9":
+            new_size = (1920,1080)
+
+        new_size = (int(new_size[0]), int(new_size[1]))  # Ensure size is integer tuple
+
         resized_img = img.resize(new_size, resample=Image.LANCZOS)  # Set desired width and height
 
         if exif_data:
