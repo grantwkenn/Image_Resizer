@@ -9,8 +9,8 @@ import filetype
 
 
 # Input and output paths
-input_path = "2015"
-output_path = "re2015"
+input_path = "input"
+output_path = "output"
 
 
 
@@ -112,17 +112,23 @@ def resize(input_path, output_path):
         else:
             exif_data = None  # No EXIF data present  
 
-        print(img.width)
-        print(img.height)
+        # print(img.width)
+        # print(img.height)
+
         new_size = (img.width / 2, img.height / 2)  # Set desired width and height
         aspectRatio = getAspectRatio(img)
         
         if aspectRatio == "1:1":
             new_size = (1440,1440)
+            print("1:1✅")
         elif aspectRatio == "4:3":
             new_size = (1920,1440)
+            print("4:3✅")
         elif aspectRatio == "16:9":
             new_size = (1920,1080)
+            print("16:9✅")
+
+        
 
         new_size = (int(new_size[0]), int(new_size[1]))  # Ensure size is integer tuple
 
@@ -132,12 +138,12 @@ def resize(input_path, output_path):
             # Embed the original EXIF data, including GPS metadata, into the resized image
             exif_bytes = piexif.dump(exif_data)
         
-            resized_img.save(output_path, exif=exif_bytes, quality=85)
-            print("Preserving EXIF data: {}".format(img.filename))
+            resized_img.save(output_path, exif=exif_bytes, icc_profile=img.info.get("icc_profile"), quality=85, subsampling=0, optimize=True)
+            print("Preserving EXIF data: {}✅".format(img.filename))
         else:
             # Save the resized image without EXIF data
-            resized_img.save(output_path, quality=85)
-            print("No EXIF data found: {}".format(img.filename))
+            resized_img.save(output_path, quality=95)
+            print("❌ No EXIF data found: {} ❌".format(img.filename))
 
         # Preserve timestamps
         shutil.copystat(input_path, output_path)
